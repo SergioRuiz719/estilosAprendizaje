@@ -10,6 +10,7 @@ app.config['MYSQL_DB'] = '##'
 
 mysql = MySQL(app)
 
+
 # Ruta para obtener todos los registros
 @app.route('/api/usuarios', methods=['GET'])
 def obtener_usuarios():
@@ -19,6 +20,7 @@ def obtener_usuarios():
     cur.close()
     return jsonify(data)
 
+
 # Ruta para obtener un usuario por ID
 @app.route('/api/usuarios/<int:usuario_id>', methods=['GET'])
 def obtener_usuario(usuario_id):
@@ -27,6 +29,7 @@ def obtener_usuario(usuario_id):
     data = cur.fetchone()
     cur.close()
     return jsonify(data)
+
 
 # Ruta para crear un nuevo usuario
 @app.route('/api/usuarios', methods=['POST'])
@@ -42,6 +45,7 @@ def crear_usuario():
 
     return jsonify({'mensaje': 'Usuario creado correctamente'})
 
+
 # Ruta para actualizar un usuario
 @app.route('/api/usuarios/<int:usuario_id>', methods=['PUT'])
 def actualizar_usuario(usuario_id):
@@ -56,6 +60,7 @@ def actualizar_usuario(usuario_id):
 
     return jsonify({'mensaje': 'Usuario actualizado correctamente'})
 
+
 # Ruta para eliminar un usuario
 @app.route('/api/usuarios/<int:usuario_id>', methods=['DELETE'])
 def eliminar_usuario(usuario_id):
@@ -65,6 +70,7 @@ def eliminar_usuario(usuario_id):
     cur.close()
 
     return jsonify({'mensaje': 'Usuario eliminado correctamente'})
+
 
 if __name__ == '__main__':
     app.run(debug=True)

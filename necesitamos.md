@@ -8,5 +8,9 @@
     - Define perfiles para cada estilo de aprendizaje, indicando consejos, estrategias y ejercicios específicos para cada uno. Estos perfiles serán utilizados para proporcionar recomendaciones personalizadas a los usuarios.
 - [] 
 
+# **PROCEDIMIENTO PARA DESARROLLO DEL MATCH LEARNING**
+
+
+
 # Consultas
 - https://hevodata.com/learn/flask-mysql/
