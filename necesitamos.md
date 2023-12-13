@@ -7,3 +7,6 @@
 - [] Desarrollar Perfiles de Estilo de Aprendizaje:
     - Define perfiles para cada estilo de aprendizaje, indicando consejos, estrategias y ejercicios específicos para cada uno. Estos perfiles serán utilizados para proporcionar recomendaciones personalizadas a los usuarios.
 - [] 
+
+# Consultas
+- https://hevodata.com/learn/flask-mysql/
