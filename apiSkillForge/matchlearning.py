@@ -1,81 +1,84 @@
 import mysql.connector
 
+# Conexión a la base de datos
 conexion = mysql.connector.connect(
-    host="localhots",
-    user="root",
-    password="",
+    host="localhost",
+    user="tu_usuario",
+    password="tu_contraseña",
     database="skillforge"
 )
+
 cursor = conexion.cursor()
 
 
-# Clase para representar el perfil de aprendizaje del usuario
 class EstiloAprendizaje:
-    def __init__(self, id_estilo, nombre):
-        self.id_estilo = id_estilo
-        self.nombre = nombre
+    def __init__(self, visual=0, auditivo=0, lector_escritor=0, kinestesico=0):
+        self.visual = visual
+        self.auditivo = auditivo
+        self.lector_escritor = lector_escritor
+        self.kinestesico = kinestesico
 
 
-# Clase para el sistema de match learning
-class MatchLearning:
-    def __init__(self, id_estilo):
-        self.id_estilo = id_estilo
+def calcular_estilo_aprendizaje(respuestas):
+    puntajes = {'visual': 0, 'auditivo': 0, 'lector_escritor': 0, 'kinestesico': 0}
 
-    def obtener_consejos(self):
-        cursor.execute("SELECT Consejo FROM Consejo WHERE ID_Estilo = %s", (self.id_estilo,))
-        return cursor.fetchone()[0]
+    for respuesta in respuestas:
+        puntajes[respuesta['estilo']] += 1
 
-    def obtener_estrategias(self):
-        cursor.execute("SELECT Estrategias FROM Estrategia WHERE ID_Estilo = %s", (self.id_estilo,))
-        return cursor.fetchone()[0]
+    total_preguntas = len(respuestas)
+    porcentajes = {estilo: (puntos / total_preguntas) * 100 for estilo, puntos in puntajes.items()}
 
-    def obtener_ejercicios(self):
-        cursor.execute("SELECT Ejercicios FROM Ejercicio WHERE ID_Estilo = %s", (self.id_estilo,))
-        return cursor.fetchone()[0]
+    estilo_dominante = max(porcentajes, key=porcentajes.get)
+    return estilo_dominante
 
 
-# Función para determinar el estilo de aprendizaje basado en las respuestas del cuestionario
-def obtener_estilo_aprendizaje(respuestas):
-    # Lógica para determinar el estilo de aprendizaje
-    # (en este caso, simplemente se cuenta la mayoría de respuestas)
-    conteo_respuestas = {'A': respuestas.count('A'), 'B': respuestas.count('B'), 'C': respuestas.count('C'),
-                         'D': respuestas.count('D')}
-    estilo_dominante = max(conteo_respuestas, key=conteo_respuestas.get)
-
-    # Obtener el ID del estilo de aprendizaje desde la base de datos
-    cursor.execute("SELECT ID_Estilo FROM EstilosAprendizaje WHERE Nombre = %s", (estilo_dominante,))
-    id_estilo = cursor.fetchone()[0]
-
-    return id_estilo
-
-
-def insertar_usuario(nombre, id_estilo):
-    cursor.execute("INSERT INTO Usuarios (Nombre, ID_Estilo_Apr) VALUES (%s, %s)", (nombre, id_estilo))
+def almacenar_estilo_aprendizaje(id_usuario, estilo_aprendizaje):
+    cursor.execute(
+        "INSERT INTO Usuarios (ID_Usuario, ID_Estilo_Apr) VALUES (%s, (SELECT ID_Estilo FROM EstilosAprendizaje WHERE Nombre = %s)) ON DUPLICATE KEY UPDATE ID_Estilo_Apr = (SELECT ID_Estilo FROM EstilosAprendizaje WHERE Nombre = %s)",
+        (id_usuario, estilo_aprendizaje, estilo_aprendizaje))
     conexion.commit()
 
 
-# Cuestionario de ejemplo
-respuestas_usuario = ['A', 'B', 'A', 'C', 'D', 'A', 'B']
+def obtener_consejos(estilo_aprendizaje):
+    cursor.execute(
+        "SELECT Consejo FROM Consejo WHERE ID_Estilo = (SELECT ID_Estilo FROM EstilosAprendizaje WHERE Nombre = %s)",
+        (estilo_aprendizaje,))
+    return cursor.fetchone()[0]
 
-# Obtener el estilo de aprendizaje del usuario
-estilo_usuario = obtener_estilo_aprendizaje(respuestas_usuario)
 
-# Insertar el nuevo usuario en la base de datos
-nombre_usuario = "UsuarioEjemplo"
-insertar_usuario(nombre_usuario, estilo_usuario)
+def obtener_estrategias(estilo_aprendizaje):
+    cursor.execute(
+        "SELECT Estrategias FROM Estrategia WHERE ID_Estilo = (SELECT ID_Estilo FROM EstilosAprendizaje WHERE Nombre = %s)",
+        (estilo_aprendizaje,))
+    return cursor.fetchone()[0]
 
-# Crear una instancia de MatchLearning para el usuario
-match_learning = MatchLearning(estilo_usuario)
 
-# Obtener consejos, estrategias y ejercicios personalizados
-consejos_personalizados = match_learning.obtener_consejos()
-estrategias_personalizadas = match_learning.obtener_estrategias()
-ejercicios_personalizados = match_learning.obtener_ejercicios()
+def obtener_ejercicios(estilo_aprendizaje):
+    cursor.execute(
+        "SELECT Ejercicios FROM Ejercicio WHERE ID_Estilo = (SELECT ID_Estilo FROM EstilosAprendizaje WHERE Nombre = %s)",
+        (estilo_aprendizaje,))
+    return cursor.fetchone()[0]
 
-# Mostrar resultados
-print(f"Consejos para {nombre_usuario}: {consejos_personalizados}")
-print(f"Estrategias para {nombre_usuario}: {estrategias_personalizadas}")
-print(f"Ejercicios para {nombre_usuario}: {ejercicios_personalizados}")
 
-cursor.close()
-conexion.close()
+# Ejemplo de uso
+respuestas_usuario = [
+    {'pregunta': 1, 'respuesta': 'a', 'estilo': 'visual'},
+    {'pregunta': 2, 'respuesta': 'b', 'estilo': 'auditivo'},
+    # ... Agrega todas las respuestas del usuario
+]
+
+# Calcula el estilo de aprendizaje
+estilo_dominante = calcular_estilo_aprendizaje(respuestas_usuario)
+
+# Almacena el estilo de aprendizaje en la base de datos (sustituye 'id_usuario' con el ID real del usuario)
+almacenar_estilo_aprendizaje(id_usuario=1, estilo_aprendizaje=estilo_dominante)
+
+# Obtiene consejos, estrategias y ejercicios basados en el estilo de aprendizaje
+consejos = obtener_consejos(estilo_dominante)
+estrategias = obtener_estrategias(estilo_dominante)
+ejercicios = obtener_ejercicios(estilo_dominante)
+
+print(f"Estilo de aprendizaje dominante: {estilo_dominante}")
+print(f"Consejos: {consejos}")
+print(f"Estrategias: {estrategias}")
+print(f"Ejercicios: {ejercicios}")

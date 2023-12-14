@@ -15,12 +15,19 @@ def realizar_test_estilo_aprendizaje():
         respuesta = input(pregunta + "\nRespuesta: ").strip().lower()
         respuestas.append(respuesta)
 
+    total_respuestas = len(respuestas)
     contador_estilos = {"a": 0, "b": 0, "c": 0, "d": 0}
 
     for respuesta in respuestas:
         contador_estilos[respuesta] += 1
 
-    estilo_aprendizaje = max(contador_estilos, key=contador_estilos.get)
+    porcentajes_estilos = {opcion: (contador / total_respuestas) * 100 for opcion, contador in contador_estilos.items()}
+
+    estilo_aprendizaje = max(porcentajes_estilos, key=porcentajes_estilos.get)
+
+    print("\nResultados porcentuales:")
+    for opcion, porcentaje in porcentajes_estilos.items():
+        print(f"{opcion.upper()}: {porcentaje:.2f}%")
 
     print("\nTu estilo de aprendizaje predominante es:", end=" ")
     if estilo_aprendizaje == "a":
