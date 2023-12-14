@@ -14,3 +14,4 @@
 
 # Consultas
 - https://hevodata.com/learn/flask-mysql/
+- https://keepcoding.io/blog/ejemplos-de-algoritmos-de-matching/
