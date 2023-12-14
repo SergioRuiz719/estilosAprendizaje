@@ -10,6 +10,43 @@
 
 # **PROCEDIMIENTO PARA DESARROLLO DEL MATCH LEARNING**
 
+1. Iniciar nuevo archivo de python
+2. Instalar MySQL 
+    - pip install mysql-connector-python
+
+3. Conexiòn
+    - ``` Python
+        conexion = mysql.connector.connect(
+        host="localhots",
+        user="root",
+        password="",
+        database="skillforge"
+        ) ```
+
+4. Clase para representar el perfil de aprendizaje del usuario
+    - ``` Python
+        class EstiloAprendizaje:
+             def __init__(self, id_estilo, nombre):
+                self.id_estilo = id_estilo
+                self.nombre = nombre
+
+5. Clase para el sistema de match learning
+    - ``` Python
+        class MatchLearning:
+            def __init__(self, id_estilo):
+                self.id_estilo = id_estilo
+
+            def obtener_consejos(self):
+                cursor.execute("SELECT Consejo FROM Consejo WHERE ID_Estilo = %s", (self.id_estilo,))
+                return cursor.fetchone()[0]
+
+            def obtener_estrategias(self):
+                cursor.execute("SELECT Estrategias FROM Estrategia WHERE ID_Estilo = %s", (self.id_estilo,))
+                return cursor.fetchone()[0]
+
+            def obtener_ejercicios(self):
+                cursor.execute("SELECT Ejercicios FROM Ejercicio WHERE ID_Estilo = %s", (self.id_estilo,))
+                return cursor.fetchone()[0]
 
 
 # Consultas
