@@ -1,169 +1,190 @@
-from flask import Flask, request, jsonify
-from flask_mysqldb import MySQL
+from flask import Flask, jsonify, request
+import mysql.connector
 
 app = Flask(__name__)
 
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = ''
-app.config['MYSQL_DB'] = 'skillforge'
+# Configuración de la base de datos
+db_config = {
+    'host': 'localhost',
+    'user': 'root',
+    'password': '',
+    'database': 'skillforge'
+}
 
-mysql = MySQL(app)
+# Conexión a la base de datos
+conn = mysql.connector.connect(**db_config)
+cursor = conn.cursor()
 
 
-# Ruta para obtener todos los registros
+# Ruta para obtener todos los elementos
 @app.route('/api/usuarios', methods=['GET'])
-def obtener_usuarios():
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM usuarios")
-    data = cur.fetchall()
-    cur.close()
-    return jsonify(data)
+def get_usuarios():
+    cursor.execute('SELECT * FROM usuarios')
+    result = cursor.fetchall()
+    elementos = [{'ID_Usuario': row[0], 'Nombre': row[1], 'ID_Estilo': row[2]} for row in result]
+    return jsonify({'elementos': elementos})
 
 
 # Ruta para obtener un usuario por ID
 @app.route('/api/usuarios/<int:ID_Usuario>', methods=['GET'])
 def obtener_usuario(ID_Usuario):
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM usuarios WHERE id = %s", (ID_Usuario,))
-    data = cur.fetchone()
-    cur.close()
-    return jsonify(data)
+    cursor.execute("SELECT * FROM usuarios WHERE ID_Usuario = %s", (ID_Usuario,))
+    result = cursor.fetchone()
+    if result:
+        elemento = {'ID_Usuario': result[0], 'Nombre': result[1], 'ID_Estilo': result[2]}
+        return jsonify({'elemento': elemento})
+    else:
+        return jsonify({'message': 'Elemento no encontrado'}), 404
 
 
-# Ruta para crear un nuevo usuario
+# Ruta para agregar un usuario
 @app.route('/api/usuarios', methods=['POST'])
-def crear_usuario():
-    data = request.get_json()
-    nombre = data['nombre']
-    ID_Estilo_Apr = data['ID_Estilo_Apr']
+def add_usuario():
+    nuevo_usuario = request.get_json()
+    Nombre = nuevo_usuario.get('Nombre')
+    ID_Estilo = nuevo_usuario.get('ID_Estilo')
 
-    cur = mysql.connection.cursor()
-    cur.execute("INSERT INTO usuarios (nombre, ID_Estilo_Apr) VALUES (%s, %s)", (nombre, ID_Estilo_Apr))
-    mysql.connection.commit()
-    cur.close()
+    cursor.execute('INSERT INTO usuarios (Nombre, ID_Estilo) VALUES (%s, %s)', (Nombre, ID_Estilo))
+    conn.commit()
 
-    return jsonify({'mensaje': 'Usuario Asignado correctamente'})
+    return jsonify({'message': 'Aprendizaje agregado a usuario correctamente'}), 201
 
+"""
+#Eliminar aprendizaje de usuario
+@app.route('/api/usuarios/<int:ID_Estilo>', methods=['DELETE'])
+def delete_usuario(ID_Estilo):
+    cursor.execute('DELETE FROM usuarios WHERE ID_Estilo = %s', (ID_Estilo,))
+    conn.commit()
 
-# Ruta para actualizar un aprendizaje
+    return jsonify({'message': 'Estilo de usuario eliminado correctamente'})
+"""
+
+#Actualizar aprendizaje
 @app.route('/api/usuarios/<int:ID_Usuario>', methods=['PUT'])
-def actualizar_aprendizazje(ID_Usuario):
-    data = request.get_json()
-    ID_Estilo_Apr = data['ID_Estilo_Apr']
+def update_usuario(ID_Usuario):
+    usuario_actualizado = request.get_json()
+    ID_Estilo = usuario_actualizado.get('ID_Estilo')
 
-    cur = mysql.connection.cursor()
-    cur.execute("UPDATE usuarios SET ID_Estilo_Apr = %s WHERE id = %s", (ID_Estilo_Apr, ID_Usuario))
-    mysql.connection.commit()
-    cur.close()
+    cursor.execute('UPDATE usuarios SET  ID_Estilo = %s WHERE ID_Usuario = %s', (ID_Estilo, ID_Usuario))
+    conn.commit()
 
-    return jsonify({'mensaje': 'Se actualizo correctamente el aprendizaje'})
-
-
-"""
-# Ruta para eliminar un usuario
-@app.route('/api/usuarios/<int:usuario_id>', methods=['DELETE'])
-def eliminar_usuario(usuario_id):
-    cur = mysql.connection.cursor()
-    cur.execute("DELETE FROM usuarios WHERE id = %s", (usuario_id,))
-    mysql.connection.commit()
-    cur.close()
-
-    return jsonify({'mensaje': 'Usuario eliminado correctamente'})
-"""
+    return jsonify({'message': 'Estilo  de usuario actualizado correctamente'})
 
 
 # Ruta para inserter nuevo consejo
 @app.route('/api/consejo', methods=['POST'])
-def crear_consejo():
-    data = request.get_json()
-    ID_Estilo = data['ID_Estilo']
-    Consejo = data['Consejo']
+def add_consejo():
+    nuevo_consejo = request.get_json()
+    ID_Estilo = nuevo_consejo.get('ID_Estilo')
+    Consejo = nuevo_consejo.get("Consejo")
 
-    cur = mysql.connection.cursor()
-    cur.execute("INSERT INTO consejo (ID_Estilo, Consejo) VALUES (%s, %s)", (ID_Estilo, Consejo))
-    mysql.connection.commit()
-    cur.close()
+    cursor.execute('INSERT INTO consejo (ID_Estilo, Consejo) VALUES (%s, %s)', (ID_Estilo, Consejo))
+    conn.commit()
 
-    return jsonify({'mensaje': 'Consejo creado correctamente'})
+    return jsonify({'message': 'Consejo agregado correctamente'}), 201
 
 
-# Ruta para eliminar un consejo
+# Ruta para obtener todos los consejos
+@app.route('/api/consejo', methods=['GET'])
+def get_consejos():
+    cursor.execute('SELECT * FROM consejo')
+    result = cursor.fetchall()
+    elementos = [{'ID_Consejo': row[0], 'ID_Estilo': row[1], 'Consejo': row[2]} for row in result]
+    return jsonify({'elementos': elementos})
+
+
+#Eliminar consejo
 @app.route('/api/consejo/<int:ID_Consejo>', methods=['DELETE'])
-def eliminar_consejo(ID_Consejo):
-    cur = mysql.connection.cursor()
-    cur.execute("DELETE FROM consejo WHERE id = %s", (ID_Consejo,))
-    mysql.connection.commit()
-    cur.close()
+def delete_consejo(ID_Consejo):
+    cursor.execute('DELETE FROM consejo WHERE ID_Consejo = %s', (ID_Consejo,))
+    conn.commit()
 
-    return jsonify({'mensaje': 'Consejo eliminado correctamente'})
+    return jsonify({'message': 'Estilo de usuario eliminado correctamente'})
 
 
-# Ruta para  inserter nuevo ejercicio
+# Ruta para inserter nuevo ejercicio
 @app.route('/api/ejercicio', methods=['POST'])
-def crear_ejercicio():
-    data = request.get_json()
-    ID_Estilo = data['ID_Estilo']
-    Ejercicios = data['Ejercicios']
+def add_ejercicio():
+    nuevo_ejercicio = request.get_json()
+    ID_Estilo = nuevo_ejercicio.get('ID_Estilo')
+    Ejercicios = nuevo_ejercicio.get("Ejercicios")
 
-    cur = mysql.connection.cursor()
-    cur.execute("INSERT INTO ejercicio (ID_Estilo, Ejercicios) VALUES (%s, %s)", (ID_Estilo, Ejercicios))
-    mysql.connection.commit()
-    cur.close()
+    cursor.execute('INSERT INTO ejercicio (ID_Estilo, Ejercicios) VALUES (%s, %s)', (ID_Estilo, Ejercicios))
+    conn.commit()
 
-    return jsonify({'mensaje': 'Ejercicio creado correctamente'})
+    return jsonify({'message': 'Ejercicio agregado correctamente'}), 201
 
 
-# Ruta para eliminar un ejercicio
+# Ruta para obtener todos los Ejercicios
+@app.route('/api/ejercicio', methods=['GET'])
+def get_ejercicios():
+    cursor.execute('SELECT * FROM ejercicio')
+    result = cursor.fetchall()
+    elementos = [{'ID_Ejercicio': row[0], 'ID_Estilo': row[1], 'Ejercicios': row[2]} for row in result]
+    return jsonify({'elementos': elementos})
+
+
+#Eliminar Ejercicios
 @app.route('/api/ejercicio/<int:ID_Ejercicio>', methods=['DELETE'])
-def eliminar_ejercicio(ID_Ejercicio):
-    cur = mysql.connection.cursor()
-    cur.execute("DELETE FROM ejercicio WHERE id = %s", (ID_Ejercicio,))
-    mysql.connection.commit()
-    cur.close()
+def delete_ejercicio(ID_Ejercicio):
+    cursor.execute('DELETE FROM ejercicio WHERE ID_Ejercicio = %s', (ID_Ejercicio,))
+    conn.commit()
 
-    return jsonify({'mensaje': 'Ejercicio eliminado correctamente'})
+    return jsonify({'message': 'Estilo de usuario eliminado correctamente'})
 
 
-# Ruta para  inserter nueva estrategia
+# Ruta para inserter nuevo estrategia
 @app.route('/api/estrategia', methods=['POST'])
-def crear_estrategia():
-    data = request.get_json()
-    ID_Estilo = data['ID_Estilo']
-    Estrategias = data['Estrategias']
+def add_estrategia():
+    nuevo_estrategia = request.get_json()
+    ID_Estilo = nuevo_estrategia.get('ID_Estilo')
+    Estrategias = nuevo_estrategia.get("Estrategias")
 
-    cur = mysql.connection.cursor()
-    cur.execute("INSERT INTO ejercicio (ID_Estilo, Estrategias) VALUES (%s, %s)", (ID_Estilo, Estrategias))
-    mysql.connection.commit()
-    cur.close()
+    cursor.execute('INSERT INTO ejercicio (ID_Estilo, Estrategias) VALUES (%s, %s)', (ID_Estilo, Estrategias))
+    conn.commit()
 
-    return jsonify({'mensaje': 'Estrategia creado correctamente'})
+    return jsonify({'message': 'Estrategia agregado correctamente'}), 201
 
 
-# Ruta para eliminar un estrategia
+# Ruta para obtener todos los Ejercicios
+@app.route('/api/estrategia', methods=['GET'])
+def get_estrategias():
+    cursor.execute('SELECT * FROM ejercicio')
+    result = cursor.fetchall()
+    elementos = [{'ID_Estrategia': row[0], 'ID_Estilo': row[1], 'Estrategias': row[2]} for row in result]
+    return jsonify({'elementos': elementos})
+
+
+
+#Eliminar Estrategias
 @app.route('/api/estrategia/<int:ID_Estrategia>', methods=['DELETE'])
-def eliminar_estrategia(ID_Estrategia):
-    cur = mysql.connection.cursor()
-    cur.execute("DELETE FROM estrategia WHERE id = %s", (ID_Estrategia,))
-    mysql.connection.commit()
-    cur.close()
+def delete_estrategia(ID_Estrategia):
+    cursor.execute('DELETE FROM estrategia WHERE ID_Estrategia = %s', (ID_Estrategia,))
+    conn.commit()
 
-    return jsonify({'mensaje': 'Estrategia eliminado correctamente'})
+    return jsonify({'message': 'Estilo de usuario eliminado correctamente'})
 
 
 # Ruta para  inserter diferente estilo
-@app.route('/api/dif_estilo', methods=['POST'])
-def diferente_estilo():
-    data = request.get_json()
-    ID_Estilo = data['ID_Estilo']
-    ID_Usuario = data['ID_Usuario']
+@app.route('/api/userdifest', methods=['POST'])
+def add_userdifest():
+    nuevo_difestilo = request.get_json()
+    ID_Estilo = nuevo_difestilo.get('ID_Estilo')
+    ID_Usuario = nuevo_difestilo.get("ID_Usuario")
 
-    cur = mysql.connection.cursor()
-    cur.execute("INSERT INTO ejercicio (ID_Estilo, ID_Usuario) VALUES (%s, %s)", (ID_Estilo, ID_Usuario))
-    mysql.connection.commit()
-    cur.close()
+    cursor.execute('INSERT INTO userdifest (ID_Usuario, ID_Estilo) VALUES (%s, %s)', (ID_Usuario, ID_Estilo))
+    conn.commit()
 
-    return jsonify({'mensaje': 'Diferente estilo de aprendizaje seleccionado correctamente'})
+    return jsonify({'message': 'Diferente estilo agregado correctamente'}), 201
+
+
+#Eliminar diferente estilo
+@app.route('/api/userdifest/<int:ID_difest>', methods=['DELETE'])
+def delete_difestilo(ID_difest):
+    cursor.execute('DELETE FROM userdifest WHERE ID_difest = %s', (ID_difest,))
+    conn.commit()
+
+    return jsonify({'message': 'Estilo de usuario eliminado correctamente'})
 
 
 if __name__ == '__main__':
