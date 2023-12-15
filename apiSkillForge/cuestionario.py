@@ -1,3 +1,14 @@
+import mysql.connector
+
+conexion = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password="",
+    database="skillforge"
+)
+
+cursor = conexion.cursor()
+
 def realizar_test_estilo_aprendizaje():
     preguntas = [
         "Cuando intentas recordar algo importante, ¿qué haces principalmente?\n a. Visualizo imágenes o diagramas.\n b. Repito la información en mi mente o en voz alta.\n c. Leo las notas o el material.\n d. Hago movimientos o gestos para recordar.",
@@ -39,5 +50,9 @@ def realizar_test_estilo_aprendizaje():
     elif estilo_aprendizaje == "d":
         print("Kinestésico.")
 
+    return estilo_aprendizaje
+
+
 if __name__ == "__main__":
-    realizar_test_estilo_aprendizaje()
+    estilo_usuario = realizar_test_estilo_aprendizaje()
+    print(f"Estilo de aprendizaje predominante: {estilo_usuario}")
