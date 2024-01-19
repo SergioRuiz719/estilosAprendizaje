@@ -15,6 +15,12 @@ db_config = {
 conn = mysql.connector.connect(**db_config)
 cursor = conn.cursor()
 
+#Ruta para obtener usuario actual
+@app.route('/api/id_usuario_actual', methods=['GET'])
+def obtener_id_usuario_actual():
+    ID_Usuario = request.headers.get('Authorization')
+    return jsonify({'ID_Usuario_Actual': ID_Usuario})
+
 
 # Ruta para obtener todos los elementos
 @app.route('/api/usuarios', methods=['GET'])
@@ -48,16 +54,6 @@ def add_usuario():
     conn.commit()
 
     return jsonify({'message': 'Aprendizaje agregado a usuario correctamente'}), 201
-
-"""
-#Eliminar aprendizaje de usuario
-@app.route('/api/usuarios/<int:ID_Estilo>', methods=['DELETE'])
-def delete_usuario(ID_Estilo):
-    cursor.execute('DELETE FROM usuarios WHERE ID_Estilo = %s', (ID_Estilo,))
-    conn.commit()
-
-    return jsonify({'message': 'Estilo de usuario eliminado correctamente'})
-"""
 
 #Actualizar aprendizaje
 @app.route('/api/usuarios/<int:ID_Usuario>', methods=['PUT'])
